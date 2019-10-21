@@ -1,12 +1,15 @@
 package com.arvifox.coordlayout
 
 import android.view.View
-import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.appbar.CollapsingToolbarLayout
 
-class BottomBarBehavior(private val toolBarResId: Int, private val collapsingToolbarLayoutResId: Int, private val bottomBarUpdateListener: IBottomBarUpdateListener) : CoordinatorLayout.Behavior<View>(){
+class BottomBarBehavior(private val bottomBarUpdateListener: IBottomBarUpdateListener,
+                        private val posTriggerThresholdPx: Int = 6) : CoordinatorLayout.Behavior<View>(){
+
+    private var animating = false
+    private var state: ViewState = ViewState.VISIBLE
+    private var prevPos: Float = -1f
 
     override fun layoutDependsOn(
         parent: CoordinatorLayout,
@@ -21,23 +24,35 @@ class BottomBarBehavior(private val toolBarResId: Int, private val collapsingToo
         child: View,
         dependency: View
     ): Boolean {
-        val collapsingTb = parent.findViewById<CollapsingToolbarLayout>(collapsingToolbarLayoutResId) ?: return false
-        val toolBar = parent.findViewById<Toolbar>(toolBarResId) ?: return false
+        val currentPos = dependency.bottom.toFloat()
+        if(prevPos == -1f){
+            prevPos = currentPos
+            return false
+        }
 
-        val minHeight = toolBar.height.toFloat()
-        val maxHeight = collapsingTb.height.toFloat()
+        if(prevPos - currentPos < -posTriggerThresholdPx && state == ViewState.HIDDEN && !animating) {
+            animating = true
+            bottomBarUpdateListener.showBottomBar {
+                animating = false
+                state = ViewState.VISIBLE
+            }
+        }
 
-        var frac = (dependency.bottom - maxHeight) / (minHeight - maxHeight)
-        if(frac > 1)
-            frac = 1f
-        else if(frac < 0f)
-            frac = 0f
+        if(prevPos - currentPos > posTriggerThresholdPx && state == ViewState.VISIBLE && !animating) {
+            animating = true
+            bottomBarUpdateListener.hideBottomBar {
+                animating = false
+                state = ViewState.HIDDEN
+            }
+        }
 
-        val offset = if(frac == 1f) child.height.toFloat() else (frac * child.height)
-
-        bottomBarUpdateListener.onTranslationY(offset)
-        child.translationY = child.height.toFloat()
+        prevPos = currentPos
 
         return true
+    }
+
+    private enum class ViewState {
+        HIDDEN,
+        VISIBLE
     }
 }
