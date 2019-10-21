@@ -1,25 +1,34 @@
 package com.arvifox.coordlayout
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.appcompat.widget.Toolbar
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.CollapsingToolbarLayout
 import kotlinx.android.synthetic.main.fragment_mob.*
+import java.lang.ref.WeakReference
 
 class MobFragment : Fragment(), RecAdapter.OnClickListener {
 
     companion object {
-        fun newInstance(): MobFragment {
+        fun newInstance(bottomBarUpdateListener: IBottomBarUpdateListener): MobFragment {
             val f = MobFragment()
+            f.bottomBarUpdateListener = bottomBarUpdateListener
             return f
         }
     }
+
+    private var bottomBarUpdateListener: IBottomBarUpdateListener? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,6 +43,9 @@ class MobFragment : Fragment(), RecAdapter.OnClickListener {
         rvList.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         rvList.addItemDecoration(DividerItemDecoration(context, RecyclerView.VERTICAL))
         rvList.adapter = RecAdapter(this, GetData.get())
+
+        val bottomBarUpdateListener = bottomBarUpdateListener ?: return
+        (navigationPlaceholder.layoutParams as CoordinatorLayout.LayoutParams).behavior = BottomBarBehavior(168f, 608f, bottomBarUpdateListener)
     }
 
     override fun onClick(p: Int, item: BazDto, v: View) {
