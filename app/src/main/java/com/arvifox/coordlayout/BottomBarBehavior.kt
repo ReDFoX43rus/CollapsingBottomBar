@@ -1,11 +1,12 @@
 package com.arvifox.coordlayout
 
-import android.util.Log
 import android.view.View
+import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.CollapsingToolbarLayout
 
-class BottomBarBehavior(private val dependencyMinHeight: Float, private val dependencyMaxHeight: Float, private val bottomBarUpdateListener: IBottomBarUpdateListener) : CoordinatorLayout.Behavior<View>(){
+class BottomBarBehavior(private val toolBarResId: Int, private val collapsingToolbarLayoutResId: Int, private val bottomBarUpdateListener: IBottomBarUpdateListener) : CoordinatorLayout.Behavior<View>(){
 
     override fun layoutDependsOn(
         parent: CoordinatorLayout,
@@ -20,11 +21,17 @@ class BottomBarBehavior(private val dependencyMinHeight: Float, private val depe
         child: View,
         dependency: View
     ): Boolean {
-        var frac = (dependency.bottom - dependencyMaxHeight) / (dependencyMinHeight - dependencyMaxHeight)
+        val collapsingTb = parent.findViewById<CollapsingToolbarLayout>(collapsingToolbarLayoutResId) ?: return false
+        val toolBar = parent.findViewById<Toolbar>(toolBarResId) ?: return false
+
+        val minHeight = toolBar.height.toFloat()
+        val maxHeight = collapsingTb.height.toFloat()
+
+        var frac = (dependency.bottom - maxHeight) / (minHeight - maxHeight)
         if(frac > 1)
             frac = 1f
-
-        Log.d("BEHAVIOR", "$dependencyMinHeight $dependencyMaxHeight")
+        else if(frac < 0f)
+            frac = 0f
 
         val offset = if(frac == 1f) child.height.toFloat() else (frac * child.height)
 

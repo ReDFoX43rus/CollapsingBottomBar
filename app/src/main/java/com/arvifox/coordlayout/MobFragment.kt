@@ -45,7 +45,8 @@ class MobFragment : Fragment(), RecAdapter.OnClickListener {
         rvList.adapter = RecAdapter(this, GetData.get())
 
         val bottomBarUpdateListener = bottomBarUpdateListener ?: return
-        (navigationPlaceholder.layoutParams as CoordinatorLayout.LayoutParams).behavior = BottomBarBehavior(168f, 608f, bottomBarUpdateListener)
+        (navigationPlaceholder.layoutParams as CoordinatorLayout.LayoutParams).behavior =
+            BottomBarBehavior(R.id.toolBarContainer, R.id.collapsingToolbarLayout, bottomBarUpdateListener)
     }
 
     override fun onClick(p: Int, item: BazDto, v: View) {
